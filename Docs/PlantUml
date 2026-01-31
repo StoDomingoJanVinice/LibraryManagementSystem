@@ -1,1 +1,27 @@
+@startuml
+package "Configuration" {
+    class DatabaseConnection <<Singleton>> {
+        -_instance
+        +__new__()
+    }
+}
 
+package "Models" {
+    interface BookRepository {
+        +get_all()
+    }
+}
+
+package "Services" {
+    class LibraryItemFactory <<Factory>> {
+        +create_item(type, title)
+    }
+    class BookService {
+        -repository
+        +get_available_books()
+    }
+}
+
+BookService o-- BookRepository
+BookRepository --> DatabaseConnection
+@enduml
