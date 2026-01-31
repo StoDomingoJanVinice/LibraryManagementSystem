@@ -1,18 +1,11 @@
-# models/bookModel.py
+# models/bookModel.py (Now acting as a Repository)
 from config.database import get_db_connection
 
-class BookModel:
-    def get_all_books(self):
-        """Connects to the database and fetches all book records"""
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        # Simple query to get data
+class BookRepository:
+    def __init__(self):
+        self.db = get_db_connection()
+
+    def get_all(self):
+        cursor = self.db.cursor()
         cursor.execute("SELECT * FROM books")
-        rows = cursor.fetchall()
-        
-        # Convert sqlite rows to a list of dictionaries
-        books = [dict(row) for row in rows]
-        
-        conn.close()
-        return books
+        return [dict(row) for row in cursor.fetchall()]
