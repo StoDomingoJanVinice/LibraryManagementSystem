@@ -1,21 +1,14 @@
 # config/database.py
 import sqlite3
 
-def get_db_connection():
-    # This creates a connection to a local file named library.db
-    conn = sqlite3.connect('library.db')
-    conn.row_factory = sqlite3.Row  # Allows accessing columns by name
-    return conn
+class DatabaseConnection:
+    _instance = None
 
-def init_db():
-    conn = get_db_connection()
-    conn.execute('''
-        CREATE TABLE IF NOT EXISTS books (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            title TEXT NOT NULL,
-            author TEXT NOT NULL,
-            status TEXT DEFAULT 'Available'
-        )
-    ''')
-    conn.commit()
-    conn.close()
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = sqlite3.connect('library.db', check_same_thread=False)
+            cls._instance.row_factory = sqlite3.Row
+        return cls._instance
+
+def get_db_connection():
+    return DatabaseConnection()
