@@ -1,42 +1,37 @@
 # app.py
-from config.database import init_db
+from config.database import init_db, get_db_connection
 from models.bookModel import BookModel
 from services.bookService import BookService
 from controllers.bookController import BookController
 
-def bootstrap():
-    """
-    This function handles the 'Wiring' of the application.
-    It follows the Dependency Injection pattern.
-    """
-    # 1. Initialize the Database (Create tables if they don't exist)
-    print("[System] Initializing Database...")
-    init_db()
-
-    # 2. Instantiate the Model (Data Layer)
-    model = BookModel()
-
-    # 3. Instantiate the Service and Inject the Model
-    # This keeps business logic separate from raw data access
-    service = BookService(model)
-
-    # 4. Instantiate the Controller and Inject the Service
-    # The Controller doesn't know HOW the service works, just that it exists
-    controller = BookController(service)
-
-    return controller
+def seed_data():
+    """Adds sample data if the database is empty"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM books")
+    if cursor.fetchone()[0] == 0:
+        books = [
+            ('The Great Gatsby', 'F. Scott Fitzgerald', 'Available'),
+            ('1984', 'George Orwell', 'Available'),
+            ('The Hobbit', 'J.R.R. Tolkien', 'Borrowed')
+        ]
+        cursor.executemany("INSERT INTO books (title, author, status) VALUES (?, ?, ?)", books)
+        conn.commit()
+    conn.close()
 
 def main():
-    # Setup the MVC components
-    library_controller = bootstrap()
+    # 1. Setup Database
+    init_db()
+    seed_data()
 
-    print("\n--- Welcome to the Library Management System ---")
-    print("Architecture: Monolithic MVC")
-    print("Pattern: Dependency Injection\n")
+    # 2. Dependency Injection Integration
+    model = BookModel()                  # Data Layer
+    service = BookService(model)         # Business Layer (inject model)
+    controller = BookController(service) # Application Layer (inject service)
 
-    # Trigger the controller logic to display books
-    # In a real app, this would be triggered by a URL route or UI button
-    library_controller.display_books()
+    # 3. Execution
+    print("System: Library Management System Started (Monolithic MVC)")
+    controller.display_books()
 
 if __name__ == "__main__":
     main()
